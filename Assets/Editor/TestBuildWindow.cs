@@ -8,6 +8,8 @@ using System.IO;
 using System;
 using UnityEditor.Build.Content;
 using System.Diagnostics;
+using BuildCompression = UnityEngine.BuildCompression;
+using CompressionType = UnityEngine.CompressionType;
 
 public class TestBuildWindow : EditorWindow
 {
@@ -50,7 +52,7 @@ public class TestBuildWindow : EditorWindow
 		var window = GetWindow<TestBuildWindow>("Build Window");
 		window.settings.buildTarget = EditorUserBuildSettings.activeBuildTarget;
 		window.settings.buildGroup = EditorUserBuildSettings.selectedBuildTargetGroup;
-		window.settings.outputPath = Application.dataPath;
+		window.settings.outputPath = Application.streamingAssetsPath;
         window.Show();
 	}
 
@@ -148,12 +150,26 @@ public class TestBuildWindow : EditorWindow
     {
 		var buildContent = GetBundleContent();//new BundleBuildContent(ContentBuildInterface.GenerateAssetBundleBuilds());
         var buildParams = new BundleBuildParameters(settings.buildTarget, settings.buildGroup, settings.outputPath);
-        if (settings.compressionType == CompressionType.None)
-            buildParams.BundleCompression = BuildCompression.DefaultUncompressed;
-        else if (settings.compressionType == CompressionType.Lzma)
-            buildParams.BundleCompression = BuildCompression.DefaultLZMA;
-        else if (settings.compressionType == CompressionType.Lz4 || settings.compressionType == CompressionType.Lz4HC)
-            buildParams.BundleCompression = BuildCompression.DefaultLZ4;
+
+        switch (settings.compressionType)
+        {
+	        case CompressionType.None:
+		        buildParams.BundleCompression = BuildCompression.Uncompressed;
+		        break;
+	        case CompressionType.Lzma:
+		        buildParams.BundleCompression = BuildCompression.LZMA;
+		        break;
+	        case CompressionType.Lz4:
+	        case CompressionType.Lz4HC:
+		        buildParams.BundleCompression = BuildCompression.LZ4;
+		        break; 
+        }
+        // if (settings.compressionType == CompressionType.None)
+        //     buildParams.BundleCompression = BuildCompression.DefaultUncompressed;
+        // else if (settings.compressionType == CompressionType.Lzma)
+        //     buildParams.BundleCompression = BuildCompression.DefaultLZMA;
+        // else if (settings.compressionType == CompressionType.Lz4 || settings.compressionType == CompressionType.Lz4HC)
+        //     buildParams.BundleCompression = BuildCompression.DefaultLZ4;
 
         IBundleBuildResults results;
         ReturnCode exitCode;
@@ -172,9 +188,14 @@ public class TestBuildWindow : EditorWindow
         {
             addressableNames = new string[] {"cube_Test" },
             assetBundleName = "bundle",
-            assetBundleVariant = "",
-            assetNames = new string[] { "Assets/atlas.spriteatlas" },
-
+            assetBundleVariant = "1",
+            assetNames = new string[]
+            {
+	            "Assets/Asset/atlas.spriteatlas", 
+	            "Assets/Asset/Cube_L.prefab", 
+	            "Assets/Asset/Cube_S.prefab", 
+	            
+            },
         };
 		buildDataList.Add(data);
 		IBundleBuildContent buildContent = new BundleBuildContent(buildDataList);
